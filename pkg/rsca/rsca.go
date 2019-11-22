@@ -60,7 +60,7 @@ func fingerprint(pub *rsa.PublicKey) (string, error) {
 }
 
 // Parse from PEM
-func parsePrivateKey(data []byte) (*rsa.PrivateKey, error) {
+func ParsePrivateKey(data []byte) (*rsa.PrivateKey, error) {
 	block, _ := pem.Decode(data)
 	if block == nil {
 		return nil, errors.New("failed to parse PEM block containing the key")
@@ -70,7 +70,7 @@ func parsePrivateKey(data []byte) (*rsa.PrivateKey, error) {
 }
 
 // Parse from PEM
-func parsePublicKey(data []byte) (*rsa.PublicKey, error) {
+func ParsePublicKey(data []byte) (*rsa.PublicKey, error) {
 	block, _ := pem.Decode(data)
 	if block == nil {
 		return nil, errors.New("failed to parse PEM block containing the key")
@@ -87,7 +87,7 @@ func parsePublicKey(data []byte) (*rsa.PublicKey, error) {
 }
 
 // Parse from PEM
-func parseCertificate(data []byte) (*x509.Certificate, error) {
+func ParseCertificate(data []byte) (*x509.Certificate, error) {
 	block, _ := pem.Decode(data)
 	if block == nil {
 		return nil, errors.New("failed to parse PEM block containing the key")

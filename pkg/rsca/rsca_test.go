@@ -94,11 +94,11 @@ func TestIssueClientCertificate(t *testing.T) {
 	if err != nil {
 		t.Errorf("%v", err)
 	}
-	cacert, err := parseCertificate([]byte(cacertPEM))
+	cacert, err := ParseCertificate([]byte(cacertPEM))
 	if err != nil {
 		t.Errorf("%v", err)
 	}
-	cakey, err := parsePrivateKey([]byte(cakeyPEM))
+	cakey, err := ParsePrivateKey([]byte(cakeyPEM))
 	if err != nil {
 		t.Errorf("%v", err)
 	}
