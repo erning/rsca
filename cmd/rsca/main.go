@@ -1,12 +1,18 @@
 package main
 
 import (
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"runtime"
+
+	"github.com/erning/rsca/pkg/rsca"
 
 	"github.com/erning/rsca/internal/pkg/rest"
 
@@ -25,21 +31,13 @@ var rootCmd = &cobra.Command{
 }
 
 var restCmd = &cobra.Command{
-	Use: "rest",
+	Use: "rest [host:port]",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		cacertPEM, err := ioutil.ReadFile(cacertFile)
+		cacert, cakey, err := loadCA()
 		if err != nil {
 			return err
 		}
-		cakeyPEM, err := ioutil.ReadFile(cakeyFile)
-		if err != nil {
-			return err
-		}
-
-		handler, err := rest.NewHandlerFromPEM(cacertPEM, cakeyPEM)
-		if err != nil {
-			return err
-		}
+		handler := rest.NewHandler(cacert, cakey)
 		http.HandleFunc("/issue", handler.HandleIssueClientCertificate)
 
 		var addr string
@@ -56,18 +54,69 @@ var restCmd = &cobra.Command{
 	},
 }
 
+var issueCmd = &cobra.Command{
+	Use: "issue <pubkey file>",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cacert, cakey, err := loadCA()
+		if err != nil {
+			return err
+		}
+
+		if len(args) <= 0 {
+			return errors.New("missing pubkey file")
+		}
+		pubPEM, err := ioutil.ReadFile(args[0])
+		if err != nil {
+			return err
+		}
+		pub, err := rsca.ParsePublicKey(pubPEM)
+		if err != nil {
+			return err
+		}
+		cert, err := rsca.IssueClientCertificate(cacert, cakey, pub)
+		if err != nil {
+			return err
+		}
+
+		data := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
+		fmt.Printf("%s\n", string(data))
+		return nil
+	},
+}
+
+func loadCA() (*x509.Certificate, *rsa.PrivateKey, error) {
+	cacertPEM, err := ioutil.ReadFile(cacertFile)
+	if err != nil {
+		return nil, nil, err
+	}
+	cakeyPEM, err := ioutil.ReadFile(cakeyFile)
+	if err != nil {
+		return nil, nil, err
+	}
+	cacert, err := rsca.ParseCertificate(cacertPEM)
+	if err != nil {
+		return nil, nil, err
+	}
+	cakey, err := rsca.ParsePrivateKey(cakeyPEM)
+	if err != nil {
+		return nil, nil, err
+	}
+	return cacert, cakey, nil
+}
+
 func init() {
 	// cobra.OnInitialize(initConfig)
 	{
 		flags := rootCmd.PersistentFlags()
-		flags.StringVar(&cacertFile, "cacert", "", "certificate of ca")
-		flags.StringVar(&cakeyFile, "cakey", "", "private key of ca")
+		flags.StringVar(&cacertFile, "cacert", "", "ca cert")
+		flags.StringVar(&cakeyFile, "cakey", "", "ca prikey")
 
 		_ = rootCmd.MarkPersistentFlagRequired("cacert")
 		_ = rootCmd.MarkPersistentFlagRequired("cakey")
 	}
 
 	rootCmd.AddCommand(restCmd)
+	rootCmd.AddCommand(issueCmd)
 }
 
 func main() {

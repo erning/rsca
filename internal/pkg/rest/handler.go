@@ -3,6 +3,7 @@ package rest
 import (
 	"crypto/rsa"
 	"crypto/x509"
+	"encoding/pem"
 	"io/ioutil"
 	"net/http"
 
@@ -58,5 +59,6 @@ func (h *Handler) HandleIssueClientCertificate(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	_, _ = w.Write(cert.Raw)
+	data := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
+	_, _ = w.Write(data)
 }
