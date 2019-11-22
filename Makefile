@@ -1,4 +1,8 @@
 
 .PHONY: rsca
 rsca:
-	go build github.com/erning/rsca/cmd/...
+	go build ./cmd/...
+
+.PHONY: clean
+clean:
+	rm -f rsca
