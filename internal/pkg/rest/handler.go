@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/erning/rsca/pkg/rsca"
@@ -61,4 +62,8 @@ func (h *Handler) HandleIssueClientCertificate(w http.ResponseWriter, r *http.Re
 
 	data := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: cert.Raw})
 	_, _ = w.Write(data)
+
+	log.Println()
+	log.Printf("SerialNumber: %v\n", cert.SerialNumber)
+	log.Printf("CN: %v\n", cert.Subject.CommonName)
 }
